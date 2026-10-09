@@ -7,6 +7,9 @@ import { buildRoom, placeBody, toThree, type RoomView } from './room';
 import { attachOnboardCamera } from './onboard';
 import { buildRover, setHeadlights, type RoverMesh } from './rover';
 
+/** Studio backdrop: the ground beyond the room fades into it, so there is no void around the room. */
+const BACKDROP = { day: 0xe4e1da, night: 0x0b0d10 };
+
 /**
  * three.js view. World frame is x east, y north, z up; three.js is y up
  * (see toThree). The renderer only reads SimState.
@@ -29,6 +32,8 @@ export class SceneView {
   private readonly size = new THREE.Vector2();
   private readonly room: RoomView;
   private readonly delta = new THREE.Vector3();
+  private readonly halfRoom: [number, number];
+  private readonly ground: THREE.Mesh<THREE.CircleGeometry, THREE.MeshStandardMaterial>;
 
   constructor(canvas: HTMLCanvasElement, profile: RobotProfile, room: Room) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -37,13 +42,19 @@ export class SceneView {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
-    this.scene.background = new THREE.Color(0x20252b);
+    const span = Math.hypot(...room.size);
+    this.scene.background = new THREE.Color(BACKDROP.day);
+    this.scene.fog = new THREE.Fog(BACKDROP.day, span * 0.9, span * 2.2);
 
     this.camera = new THREE.PerspectiveCamera(50, 1, 0.01, 50);
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
     this.controls.maxPolarAngle = Math.PI / 2 - 0.05;
-    this.controls.maxDistance = 8;
+    // Zoom out only as far as the whole-room view, and keep the orbit centre inside the room
+    this.controls.minDistance = 0.3;
+    this.controls.maxDistance = span * 0.95;
+    this.halfRoom = [room.size[0] / 2, room.size[1] / 2];
+    this.controls.addEventListener('change', () => this.clampTarget());
     const start = toThree([room.spawn.x, room.spawn.y, 0.05]);
     this.controls.target.copy(start);
     this.camera.position.copy(start).add(new THREE.Vector3(-0.9, 0.75, 0.9));
@@ -63,6 +74,8 @@ export class SceneView {
 
     this.room = buildRoom(room);
     this.scene.add(this.room.group);
+    this.ground = buildGround(span * 3);
+    this.scene.add(this.ground);
 
     this.rover = buildRover(profile);
     this.rover.root.traverse((o) => (o.castShadow = true));
@@ -79,6 +92,19 @@ export class SceneView {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Keep the orbit target over the room so panning can't drift off into the backdrop. */
+  private clampTarget(): void {
+    const t = this.controls.target;
+    const [hx, hz] = this.halfRoom;
+    const x = THREE.MathUtils.clamp(t.x, -hx, hx);
+    const y = THREE.MathUtils.clamp(t.y, 0, 0.6);
+    const z = THREE.MathUtils.clamp(t.z, -hz, hz);
+    if (x === t.x && y === t.y && z === t.z) return;
+    this.delta.set(x - t.x, y - t.y, z - t.z);
+    t.add(this.delta);
+    this.camera.position.add(this.delta);
   }
 
   /** Overview of the whole room from a high corner, like the Jumper demo. */
@@ -103,7 +129,10 @@ export class SceneView {
   setNight(night: boolean): void {
     this.hemi.intensity = night ? 0.06 : 1.6;
     this.sun.intensity = night ? 0.04 : 2.2;
-    this.scene.background = new THREE.Color(night ? 0x07090c : 0x20252b);
+    const backdrop = night ? BACKDROP.night : BACKDROP.day;
+    (this.scene.background as THREE.Color).set(backdrop);
+    this.scene.fog!.color.set(backdrop);
+    this.ground.material.color.set(night ? 0x16181b : 0xd9d5cc);
   }
 
   setHeadlights(on: boolean): void {
@@ -194,4 +223,13 @@ export class SceneView {
       this.drawInto(inset, box.left, H - box.bottom, box.width, box.height); // WebGL viewports start bottom-left
     }
   }
+}
+
+/** Ground disc around the room, just under its floor; the fog blends its edge into the backdrop. */
+function buildGround(radius: number): THREE.Mesh<THREE.CircleGeometry, THREE.MeshStandardMaterial> {
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(radius, 64), new THREE.MeshStandardMaterial({ color: 0xd9d5cc, roughness: 1 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.002;
+  ground.receiveShadow = true;
+  return ground;
 }
