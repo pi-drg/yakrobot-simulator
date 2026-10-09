@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>yakrobot-4wd simulator</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="./brand/favicon-32.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="hud"></div>
+    <div id="joystick" aria-label="Drive joystick"><div class="knob"></div></div>
+    <div id="hint">Click to drive · W A S D / arrows · C grab · L lights</div>
+    <div id="cam-inset" title="Click to swap with the main view"><span>ESP32-CAM</span></div>
+    <button id="lights" type="button">LIGHTS</button>
+    <button id="claw" type="button">GRAB</button>
+    <button id="stop" type="button">STOP</button>
+    <div id="panel">
+      <label>Robot <select id="robot"></select></label>
+      <label>Physics
+        <select id="physics">
+          <option value="mujoco" selected>MuJoCo</option>
+          <option value="simple">Simple</option>
+        </select>
+      </label>
+      <button id="reset" type="button">Reset</button>
+      <button id="view-toggle" type="button">Room view</button>
+      <button id="swap" type="button">FPV view</button>
+      <button id="cam-toggle" type="button">Hide camera</button>
+      <button id="night" type="button">Night</button>
+      <button id="fullscreen" type="button" title="Fullscreen">⛶</button>
+      <div id="help">W/S or ↑/↓ drive · A/D or ←/→ turn · C claw · L lights · N night · F swap FPV · V camera · Space stop · drag to orbit</div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

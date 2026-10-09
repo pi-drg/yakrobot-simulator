@@ -13,13 +13,23 @@ The default robot is the **yakrobot-4wd**, our own open-frame design
 ```
 npm ci
 npm run cad -- yakrobot-4wd   # OpenSCAD -> robots/yakrobot-4wd/stl/ (needs openscad)
-npm run model            # STLs -> public/models/<id>.glb
-npm run dev              # http://localhost:5173
-npm test                 # vitest
-npm run build            # tsc --noEmit + static build to dist/
+npm run model                 # STLs -> public/models/<id>.glb
+npm run dev                   # http://localhost:5173
+npm test                      # vitest
+npm run build                 # tsc --noEmit + static build to dist/
 ```
 
 Without a GLB the sim still runs, with a box in place of the chassis.
+
+The build has two pages:
+
+| Page | What it is |
+|---|---|
+| `/` (`index.html`) | Host page in the yakrobot.com theme: intro, the simulator in a frame, a toolbar wired to the embed API, site footer |
+| `/sim.html` | The simulator itself, full window. This is what gets framed |
+
+Brand assets in `public/brand/` are copied from the yakrobot.com brand kit and are not
+under the Apache License (see [NOTICE](NOTICE)).
 
 ## Architecture
 
@@ -55,6 +65,7 @@ flowchart LR
 | `src/robots/` | Profile registry. Every `robots/<id>/` folder with `robot.json` and `assembly.json` becomes a profile. `assembly.ts` validates the assembly contract |
 | `src/world/` | `room.ts`: the room (walls, furniture, loose objects), shared by both backends and the renderer. `claw.ts`: claw geometry from `assembly.json` |
 | `src/render/` | three.js scene. `room.ts` draws the room, `rover.ts` draws the chassis GLB with procedural wheels, motors, LEDs and claw, and `onboard.ts` provides the ESP32-CAM camera |
+| `index.html`, `sim.html` | Host page (yakrobot.com theme) and the simulator page it frames |
 | `src/embed/` | `options.ts` parses query params (embed mode, theme colours, parent origin). `api.ts` validates postMessage commands |
 | `src/shims/` | Browser stand-in for Node's `module` builtin, which MuJoCo's loader imports (build only) |
 | `scripts/` | Node build tools (run as `.ts` directly): `build-cad.ts` (OpenSCAD → STL) and `build-model.ts` (STL → low-poly flat-shaded GLB) |
@@ -142,11 +153,11 @@ runs the same physics and fit checks on every robot.
 
 ## Embedding
 
-A host page can frame the static build. See
-[`public/embed-example.html`](public/embed-example.html).
+Any page can frame `sim.html`. The site's own [`index.html`](index.html) is the reference
+host page: it frames `./sim.html?embed=1&parent=<its origin>` and drives it from its toolbar.
 
 ```html
-<iframe src="https://simulator.yakrobot.com/?embed=1&parent=https://yakrobot.com"
+<iframe src="https://simulator.yakrobot.com/sim.html?embed=1&parent=https://yakrobot.com"
         allow="fullscreen; gamepad" style="border:0; width:100%; aspect-ratio:16/10"></iframe>
 ```
 

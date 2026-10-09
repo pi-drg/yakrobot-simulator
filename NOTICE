@@ -1,0 +1,21 @@
+YakRobot Protocols — yakrobot-simulator
+
+The source code in this repository (TypeScript, HTML, CSS, OpenSCAD, and data
+files) is licensed under the Apache License, Version 2.0. See LICENSE.
+
+----------------------------------------------------------------------------
+EXCEPTION — Brand assets are NOT under the Apache License
+----------------------------------------------------------------------------
+
+The files under public/brand/ — the YakRobot symbol, favicons and app icon —
+are part of the YakRobot Protocols brand kit and are excluded from the Apache
+License:
+
+    © 2026 Protocol Institute. All rights reserved.
+
+These marks may be used only to identify and credit the project, following the
+brand kit's rules. Do not reuse, modify, recolour, or redistribute them outside
+that permission.
+
+Brand kit and full terms:
+    https://github.com/pi-drg/yakrobot-protocols-brandkit

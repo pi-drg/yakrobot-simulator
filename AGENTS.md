@@ -7,6 +7,9 @@ data contracts are in [README.md](README.md). Read it first.
 ## Layout
 
 ```
+index.html       host page in the yakrobot.com theme; frames sim.html
+sim.html         the simulator page
+public/brand/    brand-kit assets, NOT Apache (see NOTICE)
 src/main.ts      wiring: options, UI, fixed-step loop, robot/physics switching, host API
 src/input/       keyboard, joystick, gamepad -> InputHub (deadband, merge); Actions
 src/control/     robot.json contract + pure skid-steer controller and watchdog
@@ -57,6 +60,8 @@ npm run model               # STLs -> public/models/<id>.glb
   (or degrade sensibly) in `simple` as well as `mujoco`.
 - **Embed API is a contract.** `src/embed/api.ts` validates every message, `parent` pins the
   origin, and theme params accept hex colours only. Keep `tests/embed.test.ts`,
-  the README's embed section and `public/embed-example.html` in step with any change.
+  the README's embed section and the host page (`index.html`) in step with any change.
+- **Brand assets** in `public/brand/` are © Protocol Institute, used only to identify the
+  project. Don't modify or recolour them, and keep NOTICE's exception current.
 - **Tests never touch the network.** MuJoCo runs under Node in vitest.
 - Out of scope unless asked: a backend server, mecanum wheels, non-skid-steer drive.

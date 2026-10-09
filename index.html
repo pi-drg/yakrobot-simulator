@@ -1,35 +1,421 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>Rover Simulator</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulator — YakRobot Protocols</title>
+    <meta
+      name="description"
+      content="Drive the yakrobot-4wd in your browser: an open-source 4WD rover with an ESP32-CAM, simulated with MuJoCo physics. Part of YakRobot Protocols from the Distributed Robotics Group at the Protocol Institute."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="yakrobot-4wd simulator — YakRobot Protocols" />
+    <meta property="og:site_name" content="YakRobot Protocols" />
+
+    <link rel="icon" type="image/png" sizes="16x16" href="./brand/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./brand/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="./brand/apple-touch-icon-180.png" />
+    <meta name="theme-color" content="#0064ff" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Outfit:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <style>
+      /* ============ brand tokens (from yakrobot.com) ============ */
+      :root {
+        --primary: #0064ff;
+        --primary-pressed: #004fcc;
+        --primary-light-bg: #e6efff;
+        --on-primary: #ffffff;
+        --secondary: #0f6e56;
+        --accent: #d85a30;
+        --accent-bg: #faece7;
+        --canvas: #f9f8f5;
+        --surface-white: #ffffff;
+        --surface-muted: #f3f4f6;
+        --hairline: #e5e7eb;
+        --hairline-soft: #f3f4f6;
+        --ink-dark: #2c2c2a;
+        --ink-secondary: #5f5e5a;
+        --font-serif: "Instrument Serif", Georgia, serif;
+        --font-body: "Lora", Georgia, serif;
+        --font-sans: "Outfit", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", "Courier New", monospace;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-pill: 9999px;
+        --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+        --maxw: 1120px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink-dark);
+        font-family: var(--font-body);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      a { color: inherit; text-decoration: none; }
+      img { max-width: 100%; display: block; }
+      h1, h2, h3, h4 { font-family: var(--font-serif); font-weight: 400; margin: 0; letter-spacing: -0.01em; line-height: 1.05; }
+      .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+      .sans { font-family: var(--font-sans); }
+      .eyebrow {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-secondary);
+      }
+      .eyebrow a { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+      .eyebrow a:hover { color: var(--primary); }
+      a:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 4px; }
+
+      /* ============ buttons ============ */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45em;
+        font-family: var(--font-sans);
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 1.4;
+        border-radius: var(--radius-md);
+        padding: 7px 14px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        background: transparent;
+        color: var(--ink-dark);
+        transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+      }
+      .btn-ghost { border-color: var(--hairline); background: var(--surface-white); }
+      .btn-ghost:hover { border-color: var(--ink-secondary); }
+      .btn-ghost[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+      .btn-ghost[data-cmd="claw"][aria-pressed="true"] { background: var(--accent); border-color: var(--accent); }
+      .btn-stop { border-color: #c62828; color: #c62828; background: var(--surface-white); }
+      .btn-stop:hover { background: #fdecea; }
+      .btn-stop[aria-pressed="true"] { background: var(--secondary); border-color: var(--secondary); color: #fff; }
+
+      /* ============ top nav ============ */
+      header.nav {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: saturate(140%) blur(8px);
+        border-bottom: 1px solid var(--hairline);
+      }
+      .nav-inner { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+      .brand { display: flex; align-items: center; gap: 11px; color: var(--ink-dark); }
+      .brand .brand-symbol { width: 30px; height: 30px; flex: none; }
+      .brand-name { font-family: var(--font-serif); font-size: 21px; line-height: 1; letter-spacing: -0.01em; }
+      .brand-name b { font-weight: 400; }
+      .brand-tag {
+        margin-left: 4px;
+        padding: 3px 9px;
+        border-radius: var(--radius-pill);
+        background: var(--primary-light-bg);
+        color: var(--primary);
+        font: 500 12px var(--font-sans);
+      }
+      .navlinks { display: flex; align-items: center; gap: 4px; }
+      .navlinks a {
+        font-family: var(--font-sans);
+        font-size: 14px;
+        color: var(--ink-dark);
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: color 0.15s ease;
+      }
+      .navlinks a:hover { color: var(--primary); }
+      .navlinks a.nav-cta { margin-left: 6px; padding: 8px 16px; background: var(--ink-dark); color: #fff; border-radius: var(--radius-md); }
+      .navlinks a.nav-cta:hover { background: #000; color: #fff; }
+
+      /* ============ intro ============ */
+      .intro { padding: 48px 0 28px; }
+      .intro-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: end; }
+      .intro h1 { margin-top: 14px; font-size: clamp(40px, 6vw, 64px); }
+      .intro h1 em { font-style: italic; color: var(--primary); }
+      .lead { margin: 16px 0 0; max-width: 52ch; font-size: 17px; color: var(--ink-secondary); }
+      .keys { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font: 14px var(--font-sans); color: var(--ink-secondary); }
+      .keys dt { white-space: nowrap; }
+      .keys dd { margin: 0; }
+      kbd {
+        display: inline-block;
+        min-width: 22px;
+        padding: 1px 6px;
+        border: 1px solid var(--hairline);
+        border-bottom-width: 2px;
+        border-radius: 5px;
+        background: var(--surface-white);
+        color: var(--ink-dark);
+        font: 500 12px/1.5 var(--font-mono);
+        text-align: center;
+      }
+
+      /* ============ the simulator frame ============ */
+      .sim {
+        margin-bottom: 56px;
+        border: 1px solid var(--hairline);
+        border-radius: var(--radius-lg);
+        background: var(--surface-white);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .sim-stage { position: relative; background: #1b1f24; }
+      .sim-stage iframe { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: calc(100vh - 220px); min-height: 360px; border: 0; }
+      .sim-stage:fullscreen iframe { height: 100%; max-height: none; aspect-ratio: auto; }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        border-top: 1px solid var(--hairline);
+      }
+      .group { display: flex; flex-wrap: wrap; gap: 6px; }
+      .status { padding: 0 14px 10px; font: 12px var(--font-mono); color: var(--ink-secondary); }
+      .status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--hairline); vertical-align: 1px; }
+      .status.live i { background: var(--secondary); }
+
+      /* ============ notes ============ */
+      .notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 8px 0 72px; }
+      .notes h2 { font-size: 26px; margin-bottom: 8px; }
+      .notes p { margin: 0; font-size: 15px; color: var(--ink-secondary); }
+      .notes a { color: var(--primary); }
+      .notes a:hover { color: var(--primary-pressed); }
+
+      /* ============ footer ============ */
+      footer.site { background: var(--surface-white); border-top: 1px solid var(--hairline); }
+      .foot-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 36px; padding: 56px 0 36px; }
+      .foot-brand { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+      .foot-brand img { width: 26px; height: 26px; }
+      .foot-blurb { font-size: 14.5px; line-height: 1.6; color: var(--ink-secondary); max-width: 36ch; margin: 0; }
+      .foot-col h4 { font-family: var(--font-sans); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-secondary); margin-bottom: 14px; }
+      .foot-col a { display: block; font-family: var(--font-sans); font-size: 14px; color: var(--ink-secondary); padding: 5px 0; }
+      .foot-col a:hover { color: var(--primary); }
+      .ext::after { content: " ↗"; }
+      .foot-bottom {
+        border-top: 1px solid var(--hairline-soft);
+        padding: 22px 0 14px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        font: 13px var(--font-sans);
+        color: var(--ink-secondary);
+      }
+      .foot-note { margin: 0; padding: 0 0 40px; font: 12px/1.5 var(--font-sans); color: var(--ink-secondary); opacity: 0.85; }
+      .foot-note a { text-decoration: underline; text-underline-offset: 2px; }
+
+      /* ============ responsive ============ */
+      @media (max-width: 860px) {
+        .intro-grid, .notes { grid-template-columns: 1fr; }
+        .notes { gap: 24px; }
+      }
+      @media (max-width: 640px) {
+        .wrap { padding: 0 16px; }
+        .navlinks { display: none; }
+        .intro { padding: 32px 0 20px; }
+        .sim-stage iframe { aspect-ratio: 4 / 5; max-height: none; min-height: 0; }
+        .foot-grid { grid-template-columns: 1fr; }
+      }
+      /* touch screens drive with the on-screen joystick; the key list is no use there */
+      @media (hover: none) {
+        .keys { display: none; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+      }
+    </style>
   </head>
   <body>
-    <canvas id="view"></canvas>
-    <div id="hud"></div>
-    <div id="joystick" aria-label="Drive joystick"><div class="knob"></div></div>
-    <div id="hint">Click to drive · W A S D / arrows · C grab · L lights</div>
-    <div id="cam-inset" title="Click to swap with the main view"><span>ESP32-CAM</span></div>
-    <button id="lights" type="button">LIGHTS</button>
-    <button id="claw" type="button">GRAB</button>
-    <button id="stop" type="button">STOP</button>
-    <div id="panel">
-      <label>Robot <select id="robot"></select></label>
-      <label>Physics
-        <select id="physics">
-          <option value="mujoco" selected>MuJoCo</option>
-          <option value="simple">Simple</option>
-        </select>
-      </label>
-      <button id="reset" type="button">Reset</button>
-      <button id="view-toggle" type="button">Room view</button>
-      <button id="swap" type="button">FPV view</button>
-      <button id="cam-toggle" type="button">Hide camera</button>
-      <button id="night" type="button">Night</button>
-      <button id="fullscreen" type="button" title="Fullscreen">⛶</button>
-      <div id="help">W/S or ↑/↓ drive · A/D or ←/→ turn · C claw · L lights · N night · F swap FPV · V camera · Space stop · drag to orbit</div>
-    </div>
-    <script type="module" src="/src/main.ts"></script>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="https://yakrobot.com/" aria-label="YakRobot Protocols — home">
+          <img class="brand-symbol" src="./brand/yakrobot-symbol.png" width="30" height="30" alt="" aria-hidden="true" />
+          <span class="brand-name">YakRobot <b>Protocols</b></span>
+          <span class="brand-tag">Simulator</span>
+        </a>
+        <nav class="navlinks" aria-label="Primary">
+          <a href="https://yakrobot.com/#stack">Protocol Stack</a>
+          <a href="https://yakrobot.com/#drg">The Group</a>
+          <a href="https://github.com/pi-drg/yakrobot-simulator" target="_blank" rel="noopener">Source</a>
+          <a class="nav-cta" href="https://protocol-institute.org/sigs/drg/" target="_blank" rel="noopener">Join DRG</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div class="wrap intro-grid">
+          <div>
+            <p class="eyebrow">
+              <a href="https://yakrobot.com/">YakRobot Protocols</a> · Simulator
+            </p>
+            <h1>Drive the <em>yakrobot-4wd</em>.</h1>
+            <p class="lead">
+              Our open-source 4WD rover, simulated in your browser with MuJoCo physics. Click the frame to take the
+              controls, then grab the football with the claw and dribble it round the room.
+            </p>
+          </div>
+          <dl class="keys" aria-label="Controls">
+            <dt><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></dt><dd>Drive and turn (or the arrow keys)</dd>
+            <dt><kbd>C</kbd></dt><dd>Grab or release the ball</dd>
+            <dt><kbd>F</kbd></dt><dd>Swap to the ESP32-CAM view</dd>
+            <dt><kbd>L</kbd> <kbd>N</kbd></dt><dd>Headlights, day or night</dd>
+            <dt><kbd>Space</kbd></dt><dd>Stop</dd>
+          </dl>
+        </div>
+      </section>
+
+      <div class="wrap">
+        <section class="sim" aria-label="Simulator">
+          <div class="sim-stage" id="stage">
+            <iframe id="sim" title="yakrobot-4wd simulator" allow="fullscreen; gamepad"></iframe>
+          </div>
+          <div class="toolbar">
+            <div class="group">
+              <button class="btn btn-ghost" data-cmd="claw" aria-pressed="false">Grab</button>
+              <button class="btn btn-ghost" data-cmd="lights" aria-pressed="false">Lights</button>
+              <button class="btn btn-ghost" data-cmd="night" aria-pressed="false">Night</button>
+              <button class="btn btn-ghost" data-cmd="fpv" aria-pressed="false">Robot camera</button>
+              <button class="btn btn-ghost" data-cmd="follow" aria-pressed="false">Follow rover</button>
+            </div>
+            <div class="group">
+              <button class="btn btn-ghost" data-cmd="reset">Reset</button>
+              <button class="btn btn-ghost" id="fullscreen" hidden>Full screen</button>
+              <button class="btn btn-stop" data-cmd="stop" aria-pressed="false">Stop</button>
+            </div>
+          </div>
+          <div class="status" id="status"><i></i>Loading the simulator…</div>
+        </section>
+
+        <section class="notes">
+          <div>
+            <h2>The rover</h2>
+            <p>
+              Four TT gear motors, an Arduino Nano with two DRV8833 drivers and an ESP32-CAM, in a printable
+              open-frame chassis. The
+              <a href="https://github.com/pi-drg/yakrobot-simulator/tree/main/robots/yakrobot-4wd" target="_blank" rel="noopener">OpenSCAD source</a>
+              is in the repo.
+            </p>
+          </div>
+          <div>
+            <h2>The physics</h2>
+            <p>
+              MuJoCo runs in the page as WebAssembly. Speed, skid-steer turning, wheel slip and pushing the ball all
+              come from its contact solver, stepped at 50&nbsp;Hz.
+            </p>
+          </div>
+          <div>
+            <h2>Embed it</h2>
+            <p>
+              The simulator is a static page you can frame anywhere, with a small message API for your own buttons.
+              See the
+              <a href="https://github.com/pi-drg/yakrobot-simulator#embedding" target="_blank" rel="noopener">embedding guide</a>.
+            </p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site">
+      <div class="wrap">
+        <div class="foot-grid">
+          <div>
+            <div class="foot-brand">
+              <img src="./brand/yakrobot-symbol.png" width="26" height="26" alt="" aria-hidden="true" />
+              <span class="brand-name">YakRobot <b>Protocols</b></span>
+            </div>
+            <p class="foot-blurb">
+              The open-source protocol stack for decentralized, distributed robotics. A project of the Distributed
+              Robotics Group at the Protocol Institute.
+            </p>
+          </div>
+          <div class="foot-col">
+            <h4>Simulator</h4>
+            <a class="ext" href="https://github.com/pi-drg/yakrobot-simulator" target="_blank" rel="noopener">Source</a>
+            <a class="ext" href="https://github.com/pi-drg/yakrobot-simulator/tree/main/robots/yakrobot-4wd" target="_blank" rel="noopener">yakrobot-4wd design</a>
+            <a href="./sim.html">Full-window simulator</a>
+          </div>
+          <div class="foot-col">
+            <h4>YakRobot</h4>
+            <a href="https://yakrobot.com/">yakrobot.com</a>
+            <a href="https://protocol.yakrobot.com/">Protocol spec</a>
+            <a class="ext" href="https://protocol-institute.org/sigs/drg/" target="_blank" rel="noopener">Protocol Institute</a>
+          </div>
+        </div>
+        <div class="foot-bottom">
+          <span>© 2026 Distributed Robotics Group · Protocol Institute</span>
+          <span>Apache-2.0 · Physics by MuJoCo</span>
+        </div>
+        <p class="foot-note">
+          Brand assets — logos, marks and icons — are from the
+          <a href="https://github.com/pi-drg/yakrobot-protocols-brandkit" target="_blank" rel="noopener">YakRobot Protocols brand kit</a>.
+          © 2026 Protocol Institute. All rights reserved.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module">
+      // Frame the simulator. Same origin here, so `parent` pins commands and state to this page.
+      const SIM_URL = new URL('./sim.html', location.href);
+      SIM_URL.searchParams.set('embed', '1');
+      SIM_URL.searchParams.set('parent', location.origin);
+      const frame = document.getElementById('sim');
+      frame.src = SIM_URL.href;
+
+      const send = (cmd, value) => frame.contentWindow.postMessage({ type: 'yakrobot-sim', cmd, value }, SIM_URL.origin);
+
+      // Toolbar buttons toggle ("reset" is one-shot); focus goes back to the frame so the keys keep working.
+      for (const b of document.querySelectorAll('[data-cmd]')) {
+        b.addEventListener('click', () => {
+          send(b.dataset.cmd);
+          frame.focus();
+        });
+      }
+
+      const stage = document.getElementById('stage');
+      const fullBtn = document.getElementById('fullscreen');
+      fullBtn.hidden = !document.fullscreenEnabled;
+      fullBtn.addEventListener('click', () => {
+        if (document.fullscreenElement) void document.exitFullscreen();
+        else void stage.requestFullscreen().then(() => frame.focus()).catch(() => {});
+      });
+      document.addEventListener('fullscreenchange', () => {
+        fullBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+      });
+
+      // Reflect the simulator's state on the toolbar.
+      const pressed = {
+        claw: (s) => s.clawClosed,
+        lights: (s) => s.lights,
+        night: (s) => s.night,
+        fpv: (s) => s.fpv,
+        follow: (s) => s.follow,
+        stop: (s) => s.stopped,
+      };
+      const status = document.getElementById('status');
+      window.addEventListener('message', (e) => {
+        if (e.origin !== SIM_URL.origin || e.source !== frame.contentWindow) return;
+        const m = e.data;
+        if (!m || m.type !== 'yakrobot-sim' || !m.state) return;
+        for (const [cmd, get] of Object.entries(pressed)) {
+          document.querySelector(`[data-cmd="${cmd}"]`).setAttribute('aria-pressed', String(get(m.state)));
+        }
+        document.querySelector('[data-cmd="stop"]').textContent = m.state.stopped ? 'Resume' : 'Stop';
+        status.classList.add('live');
+        status.lastChild.textContent = `${m.state.robot} · physics: ${m.state.physics}`;
+      });
+    </script>
   </body>
 </html>
