@@ -291,6 +291,7 @@
             <dt><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></dt><dd>Drive and turn (or the arrow keys)</dd>
             <dt><kbd>C</kbd></dt><dd>Grab or release the ball</dd>
             <dt><kbd>F</kbd></dt><dd>Swap to the ESP32-CAM view</dd>
+            <dt><kbd>V</kbd></dt><dd>Show or hide the camera picture</dd>
             <dt><kbd>L</kbd> <kbd>N</kbd></dt><dd>Headlights, day or night</dd>
             <dt><kbd>Space</kbd></dt><dd>Stop</dd>
           </dl>
@@ -308,6 +309,7 @@
               <button class="btn btn-ghost" data-cmd="lights" aria-pressed="false">Lights</button>
               <button class="btn btn-ghost" data-cmd="night" aria-pressed="false">Night</button>
               <button class="btn btn-ghost" data-cmd="fpv" aria-pressed="false">Robot camera</button>
+              <button class="btn btn-ghost" data-cmd="camera" aria-pressed="true" title="Show or hide the camera picture (V)">Camera inset</button>
               <button class="btn btn-ghost" data-cmd="follow" aria-pressed="false">Follow rover</button>
             </div>
             <div class="group">
@@ -441,6 +443,7 @@
         lights: (s) => s.lights,
         night: (s) => s.night,
         fpv: (s) => s.fpv,
+        camera: (s) => s.camera,
         follow: (s) => s.follow,
         stop: (s) => s.stopped,
       };
