@@ -1,0 +1,15 @@
+// Static-assets-only Worker: serves the Vite build (dist/) at simulator.yakrobot.com.
+// No Worker script; "/" is the host page (index.html), "/sim.html" the framed simulator.
+// Deploy with `npm run deploy` (builds first). workers_dev / preview_urls are off so the
+// custom domain is the only public hostname.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "yakrobot-simulator",
+  "compatibility_date": "2026-09-15",
+
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "simulator.yakrobot.com", "custom_domain": true }],
+
+  "assets": { "directory": "./dist" }
+}

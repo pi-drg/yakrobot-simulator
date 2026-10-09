@@ -17,6 +17,7 @@ npm run model                 # STLs -> public/models/<id>.glb
 npm run dev                   # http://localhost:5173
 npm test                      # vitest
 npm run build                 # tsc --noEmit + static build to dist/
+npm run deploy                # build, then wrangler deploy to simulator.yakrobot.com
 ```
 
 Without a GLB the sim still runs, with a box in place of the chassis.
@@ -179,6 +180,15 @@ physics, robot`.
 
 The sim only listens to the page that frames it, and only to `parent` when that is set.
 
+## Deploy
+
+Cloudflare Workers static assets (`wrangler.jsonc`): no Worker script, `dist/` served at the
+custom domain `simulator.yakrobot.com`, with `workers_dev` and preview URLs off.
+`public/_headers` gives Vite's hashed bundles a one-year immutable cache. The model GLB is
+gitignored, so `npm run deploy` refuses to run until `public/models/yakrobot-4wd.glb` has
+been built (`npm run cad -- yakrobot-4wd && npm run model`). Pages are served with clean
+URLs, so `/sim.html` redirects to `/sim` with its query string kept.
+
 ## Status
 
 - [x] Input, controller, simple vehicle model, 50 Hz loop
@@ -186,7 +196,7 @@ The sim only listens to the page that frames it, and only to `parent` when that 
 - [x] Robot profiles, yakrobot-4wd in OpenSCAD
 - [x] Onboard camera, headlights, day/night
 - [x] Embed API
-- [ ] Deploy to simulator.yakrobot.com
+- [x] Deploy config for simulator.yakrobot.com
 - [ ] Real-robot adapter (forward duty + `Aux` to hardware)
 
 Mecanum wheels were dropped as too hard to model well.

@@ -34,6 +34,7 @@ npx tsc --noEmit            # type-check
 npm run build               # tsc + vite build -> dist/
 npm run cad -- yakrobot-4wd # needs openscad
 npm run model               # STLs -> public/models/<id>.glb
+npm run deploy              # build + wrangler deploy: the user's step, never run it
 ```
 
 ## Rules
