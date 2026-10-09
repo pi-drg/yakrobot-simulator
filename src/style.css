@@ -67,7 +67,8 @@ body.embed #panel { max-width: none; padding: 5px 6px; gap: 4px; }
 body.embed #panel label,
 body.embed #reset,
 body.embed #cam-toggle,
-body.embed #help { display: none; }
+body.embed #help,
+body.embed #fullscreen { display: none; } /* the host page owns full screen */
 body.embed #cam-inset { top: 52px; width: clamp(140px, 24vw, 280px); }
 body.embed #joystick { left: 16px; bottom: 16px; width: 120px; height: 120px; }
 body.embed #joystick .knob { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
@@ -83,4 +84,9 @@ body.embed #lights { right: 102px; bottom: 92px; width: 52px; height: 52px; font
   #lights { right: 108px; bottom: 96px; width: 56px; height: 56px; }
   #cam-inset { top: auto; bottom: 168px; right: 12px; width: 150px; }
   #hint { font-size: 12px; white-space: normal; text-align: center; width: 70vw; }
+}
+
+/* Short landscape phones: keep the camera inset clear of the LIGHTS button */
+@media (max-height: 450px) {
+  #cam-inset, body.embed #cam-inset { width: clamp(120px, 18vw, 200px); }
 }
