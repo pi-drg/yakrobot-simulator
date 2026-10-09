@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rover simulator — embed example</title>
+    <style>
+      /*
+       * EXAMPLE HOST PAGE. Branding below is a placeholder: swap in the real
+       * yakrobot logo, colours and copy. Everything outside the <iframe> is
+       * ordinary page content you control.
+       */
+      :root {
+        --brand: #2f6fde;          /* PLACEHOLDER brand colour */
+        --brand-ink: #ffffff;
+        --page: #0f1216;
+        --ink: #e8eaed;
+        --muted: #9aa3ad;
+        --card: #171b21;
+        --line: #2a313a;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--page); color: var(--ink); font: 15px/1.5 system-ui, sans-serif; }
+      header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--line); }
+      .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .02em; }
+      .logo-mark { width: 28px; height: 28px; border-radius: 7px; background: var(--brand); display: grid; place-items: center;
+        color: var(--brand-ink); font-size: 13px; }
+      .placeholder-note { font-size: 12px; color: var(--muted); border: 1px dashed var(--line); padding: 2px 8px; border-radius: 4px; }
+      main { max-width: 1040px; margin: 0 auto; padding: 32px 16px 48px; }
+      h1 { margin: 0; font-size: clamp(28px, 5vw, 44px); line-height: 1.1; }
+      h1 em { font-style: normal; color: var(--brand); }
+      .lede { color: var(--muted); max-width: 46ch; margin: 10px 0 22px; }
+      .sim { border: 2px solid var(--brand); border-radius: 14px; overflow: hidden; background: #000; }
+      .sim iframe { display: block; width: 100%; aspect-ratio: 16 / 10; border: 0; }
+      .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; padding: 10px; background: var(--card);
+        border-top: 1px solid var(--line); }
+      .group { display: flex; flex-wrap: wrap; gap: 6px; }
+      .actions button { font: 600 13px system-ui, sans-serif; color: var(--ink); background: transparent; border: 1px solid var(--line);
+        border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+      .actions select { font: 600 13px system-ui, sans-serif; color: var(--ink); background: var(--card); border: 1px solid var(--line);
+        border-radius: 6px; padding: 5px 8px; }
+      .actions button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+      .status { margin-top: 10px; font: 12px ui-monospace, monospace; color: var(--muted); }
+      footer { color: var(--muted); font-size: 12px; padding: 0 16px 32px; text-align: center; }
+      footer a { color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo"><span class="logo-mark">YR</span> yakrobot</div>
+      <span class="placeholder-note">placeholder branding</span>
+    </header>
+
+    <main>
+      <h1>Try it out.<br /><em>Drive the rover.</em></h1>
+      <p class="lede">Click inside the frame, then drive with W A S D or the arrow keys. Grab the football with the claw and dribble it round the room.</p>
+
+      <div class="sim">
+        <iframe id="sim" title="Rover simulator" allow="fullscreen; gamepad"></iframe>
+        <div class="actions">
+          <div class="group">
+            <select id="robot" aria-label="Robot">
+              <option value="yakrobot-4wd">yakrobot-4wd</option>
+            </select>
+            <button data-cmd="claw">Grab</button>
+            <button data-cmd="lights">Lights</button>
+            <button data-cmd="night">Night</button>
+          </div>
+          <div class="group">
+            <button data-cmd="fpv">Robot camera</button>
+            <button data-cmd="follow">Follow rover</button>
+            <button data-cmd="reset">Reset</button>
+            <button data-cmd="stop">Stop</button>
+          </div>
+        </div>
+      </div>
+      <div class="status" id="status">waiting for the simulator…</div>
+    </main>
+
+    <footer>
+      Physics: MuJoCo (Apache-2.0).
+    </footer>
+
+    <script>
+      // Point the frame at the sim. In production use the sim's real URL.
+      const SIM_URL = new URL('./index.html', location.href);
+      SIM_URL.searchParams.set('embed', '1');
+      SIM_URL.searchParams.set('accent', getComputedStyle(document.documentElement).getPropertyValue('--brand').trim());
+      SIM_URL.searchParams.set('parent', location.origin); // the sim only takes commands from this origin
+      const frame = document.getElementById('sim');
+      frame.src = SIM_URL.href;
+
+      const send = (cmd, value) => frame.contentWindow.postMessage({ type: 'yakrobot-sim', cmd, value }, SIM_URL.origin);
+
+      // Buttons toggle; "reset" is a one-shot. Focus goes back to the sim so the keys keep working.
+      document.querySelectorAll('[data-cmd]').forEach((b) =>
+        b.addEventListener('click', () => {
+          send(b.dataset.cmd);
+          frame.focus();
+        }),
+      );
+
+      const robotSel = document.getElementById('robot');
+      robotSel.addEventListener('change', () => {
+        send('robot', robotSel.value);
+        frame.focus();
+      });
+
+      // Reflect the sim's state on the buttons
+      const pressed = { claw: (s) => s.clawClosed, lights: (s) => s.lights, night: (s) => s.night, fpv: (s) => s.fpv,
+        follow: (s) => s.follow, stop: (s) => s.stopped };
+      window.addEventListener('message', (e) => {
+        if (e.origin !== SIM_URL.origin || e.source !== frame.contentWindow) return;
+        const m = e.data;
+        if (!m || m.type !== 'yakrobot-sim' || !m.state) return;
+        for (const [cmd, get] of Object.entries(pressed)) {
+          document.querySelector(`[data-cmd="${cmd}"]`).setAttribute('aria-pressed', String(get(m.state)));
+        }
+        robotSel.value = m.state.robot;
+        document.getElementById('status').textContent = `${m.event}: ${m.state.robot}, physics ${m.state.physics}`;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "yakrobot-simulator",
+  "version": "1.0.0",
+  "description": "Browser simulator for the yakrobot-4wd skid-steer rover",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "model": "node scripts/build-model.ts",
+    "cad": "node scripts/build-cad.ts"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "dependencies": {
+    "@mujoco/mujoco": "^3.15.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vitest": "^5.0.3"
+  },
+  "private": true
+}

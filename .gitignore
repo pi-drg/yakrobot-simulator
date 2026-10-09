@@ -1,0 +1,10 @@
+node_modules/
+dist/
+# Built models and archives stay local
+*.glb
+*.zip
+public/models/
+
+# Generated from robots/*/cad (npm run cad); the .scad source is committed
+robots/*/stl/
+robots/*/preview/

@@ -1,0 +1,72 @@
+:root {
+  /* Host pages can override these with ?accent=, ?stop=, ?panel=, ?frame= (hex colours) */
+  --accent: #e8902a;
+  --stop: #c62828;
+  --panel: rgba(0, 0, 0, 0.55);
+  --frame: rgba(255, 255, 255, 0.7);
+  --btn-bg: #2c333b;
+  --btn-border: #56606b;
+  --round-bg: #3a3f45;
+}
+
+html, body { margin: 0; height: 100%; overflow: hidden; background: #1b1f24; color: #e6e6e6; font: 13px/1.4 system-ui, sans-serif; }
+#view { display: block; width: 100vw; height: 100vh; touch-action: none; }
+#hud { position: fixed; top: 12px; left: 12px; padding: 8px 10px; background: var(--panel); border-radius: 6px; font: 12px/1.45 ui-monospace, monospace; white-space: pre; pointer-events: none; }
+#hud[hidden] { display: none; }
+
+#panel { position: fixed; top: 12px; right: 12px; max-width: 46vw; padding: 8px 10px; background: var(--panel); border-radius: 6px;
+  display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; justify-content: flex-end; }
+#panel select, #panel button { font: 12px system-ui, sans-serif; color: #e6e6e6; background: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+#panel button[hidden] { display: none; }
+#panel label { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+#help { flex-basis: 100%; font-size: 11px; text-align: right; opacity: .8; }
+
+#joystick { position: fixed; left: 28px; bottom: 28px; width: 150px; height: 150px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.08) 0 30%, rgba(255,255,255,.14) 31% 100%);
+  border: 2px solid rgba(255,255,255,.35); touch-action: none; user-select: none; cursor: grab; }
+#joystick .knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.5); pointer-events: none; }
+
+#stop { position: fixed; right: 28px; bottom: 28px; width: 96px; height: 96px; border-radius: 50%; border: 3px solid #fff;
+  background: var(--stop); color: #fff; font: 700 16px system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+#stop.latched { background: #2e7d32; }
+#cam-inset { position: fixed; top: 76px; right: 12px; width: clamp(180px, 26vw, 360px); aspect-ratio: 4 / 3;
+  border: 2px solid var(--frame); border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,.5); cursor: pointer; }
+#cam-inset.hidden { display: none; }
+#cam-inset span { position: absolute; left: 6px; top: 4px; font: 10px/1 ui-monospace, monospace; color: #fff;
+  background: rgba(0,0,0,.5); padding: 2px 4px; border-radius: 3px; }
+#lights { position: fixed; right: 136px; bottom: 124px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff;
+  background: var(--round-bg); color: #fff; font: 700 11px system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+#lights.on { background: #f4e7b8; color: #222; }
+#claw { position: fixed; right: 136px; bottom: 40px; width: 72px; height: 72px; border-radius: 50%; border: 3px solid #fff;
+  background: var(--round-bg); color: #fff; font: 700 12px system-ui, sans-serif; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,.5); }
+#claw.closed { background: var(--accent); }
+
+/* "Click to drive": only shown in embed mode while the frame lacks keyboard focus */
+#hint { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 10px 16px; border-radius: 8px;
+  background: rgba(0,0,0,.6); color: #fff; font: 600 14px system-ui, sans-serif; pointer-events: none;
+  opacity: 0; transition: opacity .2s; white-space: nowrap; }
+#hint.visible { opacity: 1; }
+
+/* Embedded in a host page: compact controls; host buttons can do the rest */
+body.embed #panel { max-width: none; padding: 5px 6px; gap: 4px; }
+body.embed #panel label,
+body.embed #reset,
+body.embed #cam-toggle,
+body.embed #help { display: none; }
+body.embed #cam-inset { top: 52px; width: clamp(140px, 24vw, 280px); }
+body.embed #joystick { left: 16px; bottom: 16px; width: 120px; height: 120px; }
+body.embed #joystick .knob { width: 46px; height: 46px; margin: -23px 0 0 -23px; }
+body.embed #stop { right: 16px; bottom: 16px; width: 76px; height: 76px; font-size: 14px; }
+body.embed #claw { right: 102px; bottom: 22px; width: 60px; height: 60px; font-size: 11px; }
+body.embed #lights { right: 102px; bottom: 92px; width: 52px; height: 52px; font-size: 10px; }
+
+@media (max-width: 600px) {
+  #help { display: none; }
+  #joystick { left: 16px; bottom: 16px; width: 130px; height: 130px; }
+  #stop { right: 16px; bottom: 16px; width: 80px; height: 80px; }
+  #claw { right: 108px; bottom: 24px; width: 64px; height: 64px; }
+  #lights { right: 108px; bottom: 96px; width: 56px; height: 56px; }
+  #cam-inset { top: auto; bottom: 168px; right: 12px; width: 150px; }
+  #hint { font-size: 12px; white-space: normal; text-align: center; width: 70vw; }
+}

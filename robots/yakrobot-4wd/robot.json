@@ -1,0 +1,53 @@
+{
+  "name": "yakrobot-4wd",
+  "wheelType": "monster",
+  "geometry": {
+    "wheelbase_m": 0.13,
+    "track_m": 0.136,
+    "wheelDiameter_m": 0.065,
+    "wheelWidth_m": 0.026
+  },
+  "limits": {
+    "topSpeed_mps": 0.68,
+    "turnRate_radps": 5.0
+  },
+  "drive": {
+    "axisSigns": {
+      "lx": 1,
+      "ly": 1,
+      "rx": -1
+    },
+    "invertLeft": false,
+    "invertRight": false,
+    "minDuty": 0.2,
+    "watchdog_ms": 300
+  },
+  "motor": {
+    "timeConstant_s": 0.12,
+    "deadZone": 0.2,
+    "stallTorque_Nm": 0.12
+  },
+  "physics": {
+    "mass_kg": 0.56,
+    "wheelMass_kg": 0.025,
+    "tyreFriction": 0.5,
+    "armature_kgm2": 0.0002
+  },
+  "provenance": {
+    "name": "custom open-frame design in cad/yakrobot-4wd.scad",
+    "geometry.wheelbase_m": "design: TT axles at x = +/-65 mm (axle_x in yakrobot-4wd.scad)",
+    "geometry.track_m": "design: motor faces at +/-47 mm + 8 mm shaft + 13 mm half wheel = +/-68 mm",
+    "geometry.wheelDiameter_m": "stock yellow TT wheel, 65 mm",
+    "geometry.wheelWidth_m": "stock yellow TT wheel, ~26 mm",
+    "physics.mass_kg": "provisional estimate: ~170 g printed PLA + 4 TT motors 120 g + 2x18650 and holder 110 g + electronics 40 g + wheels 100 g",
+    "limits.topSpeed_mps": "provisional: TT 1:48 ~200 rpm under load x pi x 65 mm",
+    "limits.turnRate_radps": "provisional: 6.5 rad/s reference TT rover spin rate scaled by the speed ratio (x 0.68 / 0.9)",
+    "drive.minDuty": "provisional: sim-side dead-zone compensation; replace with the Nano firmware's PWM floor",
+    "motor.timeConstant_s": "provisional: typical TT motor + wheel spin-up",
+    "motor.deadZone": "provisional: TT motors usually stall below ~20% PWM",
+    "motor.stallTorque_Nm": "provisional: TT 1:48 motor on 2S (7.4 V) through DRV8833, ~1.2 kg.cm stall",
+    "physics.wheelMass_kg": "stock TT wheel with rubber tyre, ~25 g",
+    "physics.tyreFriction": "provisional: knobbly rubber on smooth floor; tuned so a full-stick spin lands near limits.turnRate in MuJoCo",
+    "physics.armature_kgm2": "provisional: motor rotor inertia x 48^2 gear ratio, reflected to the wheel"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "scad": "robots/yakrobot-4wd/cad/yakrobot-4wd.scad",
+  "out": "robots/yakrobot-4wd/stl",
+  "parts": [
+    "base_plate",
+    "top_deck",
+    "body_lower",
+    "top_cover",
+    "camera_shell",
+    "bumper",
+    "motors",
+    "battery",
+    "electronics",
+    "esp32cam"
+  ]
+}

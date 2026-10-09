@@ -1,0 +1,22 @@
+{
+  "$comment": "Skid-steer mixer test vectors, worked by hand from left = v - w, right = v + w with v = ly, w = -rx (robot.json axisSigns), then divided by max(|left|, |right|) when that exceeds 1. Wheel values are normalised commands before minDuty. Reverse + right stick follows the formula literally (robot backs up while yawing clockwise).",
+  "skid": [
+    { "name": "neutral",              "in": { "lx": 0, "ly": 0,    "rx": 0 },    "out": { "left": 0,    "right": 0 } },
+    { "name": "full forward",         "in": { "lx": 0, "ly": 1,    "rx": 0 },    "out": { "left": 1,    "right": 1 } },
+    { "name": "full reverse",         "in": { "lx": 0, "ly": -1,   "rx": 0 },    "out": { "left": -1,   "right": -1 } },
+    { "name": "spin right",           "in": { "lx": 0, "ly": 0,    "rx": 1 },    "out": { "left": 1,    "right": -1 } },
+    { "name": "spin left",            "in": { "lx": 0, "ly": 0,    "rx": -1 },   "out": { "left": -1,   "right": 1 } },
+    { "name": "forward + full right", "in": { "lx": 0, "ly": 1,    "rx": 1 },    "out": { "left": 1,    "right": 0 } },
+    { "name": "half fwd + half right","in": { "lx": 0, "ly": 0.5,  "rx": 0.5 },  "out": { "left": 1,    "right": 0 } },
+    { "name": "half fwd + quarter r", "in": { "lx": 0, "ly": 0.5,  "rx": 0.25 }, "out": { "left": 0.75, "right": 0.25 } },
+    { "name": "reverse + full right", "in": { "lx": 0, "ly": -1,   "rx": 1 },    "out": { "left": 0,    "right": -1 } },
+    { "name": "slow fwd + hard left", "in": { "lx": 0, "ly": 0.3,  "rx": -0.9 }, "out": { "left": -0.5, "right": 1 } },
+    { "name": "strafe ignored",       "in": { "lx": 1, "ly": 0,    "rx": 0 },    "out": { "left": 0,    "right": 0 } }
+  ],
+  "watchdog": [
+    { "name": "fresh",        "age_s": 0,     "stopped": false },
+    { "name": "just in time", "age_s": 0.299, "stopped": false },
+    { "name": "stale",        "age_s": 0.301, "stopped": true },
+    { "name": "future stamp", "age_s": -0.05, "stopped": false }
+  ]
+}
